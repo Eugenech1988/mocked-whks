@@ -1,2 +1,3 @@
-export { useUpdateWebhook } from './useUpdateWebhook'
-export type * from './types'
+export { useUpdateWebhook } from './useUpdateWebhook';
+export { updateWebhookSchema } from './schema';
+export type * from './types';

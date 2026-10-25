@@ -1,9 +1,9 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router-dom';
 
-export function AppLayout() {
-  return (
-    <main>
-      <Outlet />
-    </main>
-  )
-}
+// for main layout if it will be
+
+export const AppLayout = () => (
+  <main>
+    <Outlet />
+  </main>
+);

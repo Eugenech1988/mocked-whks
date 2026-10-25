@@ -1,2 +1,2 @@
-export { EditWebhookDialog } from './EditWebhookDialog'
-export type * from './types'
+export { EditWebhookDialog } from './EditWebhookDialog';
+export type * from './types';

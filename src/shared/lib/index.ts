@@ -1,2 +1,2 @@
-export { cn } from './utils'
-export type * from './types'
+export { cn } from './utils';
+export type * from './types';

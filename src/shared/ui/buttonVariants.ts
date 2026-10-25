@@ -1,4 +1,4 @@
-import { cva } from 'class-variance-authority'
+import { cva } from 'class-variance-authority';
 
 export const buttonVariants = cva(
   'inline-flex h-11 cursor-pointer items-center justify-center rounded-lg px-5 text-sm font-semibold tracking-[0.01em] transition-all duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring/20 active:translate-y-px disabled:cursor-not-allowed disabled:pointer-events-none disabled:opacity-50',
@@ -14,4 +14,4 @@ export const buttonVariants = cva(
     },
     defaultVariants: { variant: 'default' },
   },
-)
+);

@@ -1,2 +1,2 @@
-export { useSessionStore } from './session'
-export type * from './types'
+export { useSessionStore } from './session';
+export type * from './types';

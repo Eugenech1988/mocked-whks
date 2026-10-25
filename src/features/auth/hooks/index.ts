@@ -1,1 +1,1 @@
-export { useCurrentUser, useLogin, useLogout } from './useAuth'
+export { useCurrentUser, useLogin, useLogout } from './useAuth';

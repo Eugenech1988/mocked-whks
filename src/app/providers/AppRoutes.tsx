@@ -1,19 +1,19 @@
-import { lazy, Suspense } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { useSessionStore } from '@/shared/store'
-import { AppLayout } from '@/app'
-import { ProtectedRoute } from './ProtectedRoute'
+import { lazy, Suspense } from 'react';
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { useSessionStore } from '@/shared/store';
+import { AppLayout } from '@/app';
+import { ProtectedRoute } from './ProtectedRoute';
 
 const LoginPage = lazy(() =>
   import('@/pages/login').then(module => ({ default: module.LoginPage })),
-)
+);
 const WebhooksPage = lazy(() =>
   import('@/pages/webhooks').then(module => ({ default: module.WebhooksPage })),
-)
+);
 
-export function AppRoutes() {
-  const sessionExpired = useSessionStore(state => state.sessionExpired)
-  if (sessionExpired) return <Navigate to="/login" replace />
+export const AppRoutes = () => {
+  const sessionExpired = useSessionStore(state => state.sessionExpired);
+  if (sessionExpired) return <Navigate to="/login" replace />;
 
   return (
     <Suspense
@@ -31,5 +31,5 @@ export function AppRoutes() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
-  )
-}
+  );
+};

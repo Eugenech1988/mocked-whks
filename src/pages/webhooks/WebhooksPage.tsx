@@ -1,11 +1,11 @@
-import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { toast } from 'sonner'
-import { useWebhooks, type TWebhook } from '@/entities/webhook'
-import { useLogout } from '@/features/auth'
-import { useUpdateWebhook, type TUpdateWebhookInput } from '@/features/edit-webhook'
-import { getFieldErrors } from '@/shared/api'
-import { EditWebhookDialog } from './components'
+import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
+import { useWebhooks, type TWebhook } from '@/entities/webhook';
+import { useLogout } from '@/features/auth';
+import { useUpdateWebhook, type TUpdateWebhookInput } from '@/features/edit-webhook';
+import { getFieldErrors } from '@/shared/api';
+import { EditWebhookDialog } from './components';
 import {
   Badge,
   Button,
@@ -21,51 +21,51 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/shared/ui'
-import type { TWebhookListLocationUpdate } from './model/types'
+} from '@/shared/ui';
+import type { TWebhookListLocationUpdate } from './model/types';
 
-export function WebhooksPage() {
-  const navigate = useNavigate()
-  const [params, setParams] = useSearchParams()
-  const [editing, setEditing] = useState<TWebhook | null>(null)
-  const page = Math.max(1, Number(params.get('page')) || 1)
-  const search = params.get('search') ?? ''
-  const { data, isLoading, isError } = useWebhooks({ page, limit: 10, search })
-  const updateWebhook = useUpdateWebhook()
-  const logout = useLogout()
-  const errors = getFieldErrors(updateWebhook.error)
+export const WebhooksPage = () => {
+  const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const [editing, setEditing] = useState<TWebhook | null>(null);
+  const page = Math.max(1, Number(params.get('page')) || 1);
+  const search = params.get('search') ?? '';
+  const { data, isLoading, isError } = useWebhooks({ page, limit: 10, search });
+  const updateWebhook = useUpdateWebhook();
+  const logout = useLogout();
+  const errors = getFieldErrors(updateWebhook.error);
 
   const save = async (payload: TUpdateWebhookInput) => {
     try {
-      await updateWebhook.mutateAsync(payload)
-      setEditing(null)
-      toast.success('Webhook updated', { description: 'Your changes have been saved.' })
+      await updateWebhook.mutateAsync(payload);
+      setEditing(null);
+      toast.success('Webhook updated', { description: 'Your changes have been saved.' });
     } catch (error) {
-      console.error('Webhook update failed:', error)
+      console.error('Webhook update failed:', error);
       toast.error('Could not save changes', {
         description: 'Check the highlighted fields and try again.',
-      })
+      });
     }
-  }
+  };
   const update = (next: TWebhookListLocationUpdate) =>
     setParams(current => {
-      const merged = { page, search, ...next }
-      if (next.search !== undefined) merged.page = 1
-      if (merged.page > 1) current.set('page', String(merged.page))
-      else current.delete('page')
-      if (merged.search) current.set('search', merged.search)
-      else current.delete('search')
-      return current
-    })
+      const merged = { page, search, ...next };
+      if (next.search !== undefined) merged.page = 1;
+      if (merged.page > 1) current.set('page', String(merged.page));
+      else current.delete('page');
+      if (merged.search) current.set('search', merged.search);
+      else current.delete('search');
+      return current;
+    });
   const signOut = () =>
     logout.mutate(undefined, {
       onSuccess: () => toast.success('Signed out'),
       onError: error => {
-        console.error('Logout failed:', error)
-        toast.error('Could not sign out', { description: 'Your local session has been cleared.' })
+        console.error('Logout failed:', error);
+        toast.error('Could not sign out', { description: 'Your local session has been cleared.' });
       },
       onSettled: () => navigate('/login', { replace: true }),
-    })
+    });
 
   return (
     <main className="mx-auto min-h-screen max-w-6xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
@@ -152,8 +152,8 @@ export function WebhooksPage() {
                             variant="ghost"
                             className="h-9 px-3 text-primary"
                             onClick={() => {
-                              updateWebhook.reset()
-                              setEditing(item)
+                              updateWebhook.reset();
+                              setEditing(item);
                             }}
                           >
                             Edit
@@ -201,17 +201,17 @@ export function WebhooksPage() {
       </Card>
 
       <EditWebhookDialog
+        key={editing?.id ?? 'closed'}
         webhook={editing}
         errors={errors}
-        isPending={updateWebhook.isPending}
         onOpenChange={open => {
           if (!open) {
-            setEditing(null)
-            updateWebhook.reset()
+            setEditing(null);
+            updateWebhook.reset();
           }
         }}
         onSave={save}
       />
     </main>
-  )
-}
+  );
+};

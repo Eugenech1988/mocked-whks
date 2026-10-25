@@ -1,4 +1,4 @@
 export type TWebhookListLocationUpdate = {
-  page?: number
-  search?: string
-}
+  page?: number;
+  search?: string;
+};

@@ -1,16 +1,16 @@
-import type { HTMLAttributes } from 'react'
-import { cn } from '@/shared/lib'
+import type { HTMLAttributes } from 'react';
+import { cn } from '@/shared/lib';
 
-export function Badge({
+export const Badge = ({
   className,
   variant = 'default',
   ...props
-}: HTMLAttributes<HTMLSpanElement> & { variant?: 'default' | 'secondary' | 'outline' }) {
+}: HTMLAttributes<HTMLSpanElement> & { variant?: 'default' | 'secondary' | 'outline' }) => {
   const variants = {
     default: 'border-transparent bg-primary/10 text-primary',
     secondary: 'border-transparent bg-secondary text-secondary-foreground',
     outline: 'border-border bg-transparent text-muted-foreground',
-  }
+  };
   return (
     <span
       className={cn(
@@ -20,5 +20,5 @@ export function Badge({
       )}
       {...props}
     />
-  )
-}
+  );
+};

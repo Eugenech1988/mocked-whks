@@ -1,2 +1,2 @@
-export { demoCredentials } from './credentials'
-export type * from './types'
+export { demoCredentials } from './credentials';
+export type * from './types';

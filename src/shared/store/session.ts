@@ -1,5 +1,5 @@
-import { create } from 'zustand'
-import type { ISessionState } from './types'
+import { create } from 'zustand';
+import type { ISessionState } from './types';
 
 export const useSessionStore = create<ISessionState>(set => ({
   signedIn: false,
@@ -10,4 +10,4 @@ export const useSessionStore = create<ISessionState>(set => ({
       sessionExpired: signedIn ? false : state.sessionExpired,
     })),
   setSessionExpired: sessionExpired => set({ sessionExpired }),
-}))
+}));

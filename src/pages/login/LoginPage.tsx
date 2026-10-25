@@ -1,10 +1,10 @@
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
-import { loginSchema, useLogin, type TLoginCredentials } from '@/features/auth'
-import { demoCredentials } from '@/mocks'
-import { getFieldErrors } from '@/shared/api'
+import { useForm, useFormState } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { loginSchema, useLogin, type TLoginCredentials } from '@/features/auth';
+import { demoCredentials } from '@/mocks';
+import { getFieldErrors } from '@/shared/api';
 import {
   Button,
   Card,
@@ -15,37 +15,34 @@ import {
   FieldError,
   Input,
   Label,
-} from '@/shared/ui'
+} from '@/shared/ui';
 
-export function LoginPage() {
-  const navigate = useNavigate()
-  const login = useLogin()
-  const {
-    register,
-    handleSubmit,
-    formState: { errors: validationErrors },
-  } = useForm<TLoginCredentials>({
+export const LoginPage = () => {
+  const navigate = useNavigate();
+  const login = useLogin();
+  const { register, control, handleSubmit } = useForm<TLoginCredentials>({
     resolver: zodResolver(loginSchema),
     mode: 'onTouched',
     defaultValues: { email: '', password: '' },
-  })
-  const serverErrors = getFieldErrors(login.error)
-  const emailError = validationErrors.email?.message ?? serverErrors.email
-  const passwordError = validationErrors.password?.message ?? serverErrors.password
+  });
+  const { errors: validationErrors, isSubmitting } = useFormState({ control });
+  const serverErrors = getFieldErrors(login.error);
+  const emailError = validationErrors.email?.message ?? serverErrors.email;
+  const passwordError = validationErrors.password?.message ?? serverErrors.password;
   const genericError =
     login.error && !serverErrors.email && !serverErrors.password
       ? 'Unable to sign in. Please try again.'
-      : ''
+      : '';
   const submit = handleSubmit(async ({ email, password }) => {
-    login.reset()
+    login.reset();
     try {
-      await login.mutateAsync({ email, password })
-      toast.success('Welcome back')
-      navigate('/', { replace: true })
+      await login.mutateAsync({ email, password });
+      toast.success('Welcome back');
+      navigate('/', { replace: true });
     } catch (error) {
-      console.error('Login failed:', error)
+      console.error('Login failed:', error);
     }
-  })
+  });
 
   return (
     <main className="grid min-h-screen place-items-center px-4 py-12 sm:px-6">
@@ -88,8 +85,8 @@ export function LoginPage() {
               {passwordError && <FieldError id="password-error" message={passwordError} />}
             </div>
             {genericError && <FieldError className="validation-message" message={genericError} />}
-            <Button type="submit" disabled={login.isPending} className="w-full">
-              {login.isPending ? 'Signing in…' : 'Sign in'}
+            <Button type="submit" disabled={isSubmitting} className="w-full">
+              {isSubmitting ? 'Signing in…' : 'Sign in'}
             </Button>
           </form>
           <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/70 p-4 text-xs leading-5 text-slate-600">
@@ -100,5 +97,5 @@ export function LoginPage() {
         </CardContent>
       </Card>
     </main>
-  )
-}
+  );
+};
