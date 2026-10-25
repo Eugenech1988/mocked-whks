@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import type { TWebhook } from '@/entities/webhook';
-import { DEMO_CREDENTIALS } from '@/shared/config/demoCredentials';
+import { DEMO_CREDENTIALS } from '@/shared/config';
 import type {
   TMockCookies,
   TMockLoginRequest,

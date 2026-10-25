@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { LOGIN_SCHEMA, useLogin, type TLoginCredentials } from '@/features/auth';
-import { DEMO_CREDENTIALS } from '@/shared/config/demoCredentials';
+import { DEMO_CREDENTIALS } from '@/shared/config';
 import { getFieldErrors } from '@/shared/api';
 import {
   Button,

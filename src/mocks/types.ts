@@ -3,7 +3,7 @@ import type {
   TTokenIssueRequest,
   TLoginRequest,
   TUser,
-} from '@/features/auth/model/types';
+} from '@/features/auth';
 import type { TWebhookUpdatePayload } from '@/entities/webhook';
 import type { TValidationPayload } from '@/shared/api';
 
