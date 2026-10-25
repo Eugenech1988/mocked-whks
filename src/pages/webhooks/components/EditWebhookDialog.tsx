@@ -14,6 +14,7 @@ import {
   Input,
   Label,
   Switch,
+  Spinner,
 } from '@/shared/ui';
 import type { TEditWebhookDialogProps } from './types';
 
@@ -110,7 +111,14 @@ export const EditWebhookDialog = ({
             Cancel
           </Button>
           <Button type="submit" form="edit-webhook-form" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving…' : 'Save changes'}
+            {isSubmitting ? (
+              <>
+                <Spinner />
+                <span className="sr-only">Saving changes</span>
+              </>
+            ) : (
+              'Save changes'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -18,5 +18,7 @@ export { FieldError } from './field-error';
 export { Label } from './label';
 export { Switch } from './switch';
 export { Toaster } from './sonner';
+export { Skeleton } from './skeleton';
+export { Spinner } from './spinner';
 export { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table';
 export type * from './types';

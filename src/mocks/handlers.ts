@@ -123,6 +123,19 @@ export const handlers = [
     const limit = Math.max(1, Number(url.searchParams.get('limit')) || 10);
     const search = (url.searchParams.get('search') ?? '').toLowerCase();
     const filtered = webhooks.filter(item => item.name.toLowerCase().includes(search));
+    const sort = url.searchParams.get('sort');
+    const direction = url.searchParams.get('direction') === 'desc' ? -1 : 1;
+    if (sort === 'name' || sort === 'url' || sort === 'active') {
+      filtered.sort((left, right) => {
+        const leftValue = left[sort];
+        const rightValue = right[sort];
+        const comparison =
+          typeof leftValue === 'boolean' && typeof rightValue === 'boolean'
+            ? Number(leftValue) - Number(rightValue)
+            : String(leftValue).localeCompare(String(rightValue));
+        return comparison * direction;
+      });
+    }
     const last = Math.max(1, Math.ceil(filtered.length / limit));
     return HttpResponse.json({
       data: filtered.slice((page - 1) * limit, page * limit),

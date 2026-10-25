@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useSessionStore } from '@/shared/store';
 import { AppLayout } from '@/app';
+import { Spinner } from '@/shared/ui';
 import { ProtectedRoute } from './ProtectedRoute';
 
 const LoginPage = lazy(() =>
@@ -18,7 +19,14 @@ export const AppRoutes = () => {
   return (
     <Suspense
       fallback={
-        <div className="grid min-h-screen place-items-center text-muted-foreground">Loading…</div>
+        <div
+          className="grid min-h-screen place-items-center text-muted-foreground"
+          role="status"
+          aria-label="Loading page"
+        >
+          <Spinner className="size-6" />
+          <span className="sr-only">Loading page</span>
+        </div>
       }
     >
       <Routes>

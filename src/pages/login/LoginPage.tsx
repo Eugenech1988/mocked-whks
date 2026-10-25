@@ -15,6 +15,7 @@ import {
   FieldError,
   Input,
   Label,
+  Spinner,
 } from '@/shared/ui';
 
 export const LoginPage = () => {
@@ -47,7 +48,7 @@ export const LoginPage = () => {
   return (
     <main className="grid min-h-screen place-items-center px-4 py-12 sm:px-6">
       <Card className="animate-page-enter w-full max-w-md overflow-hidden border-white/80 shadow-[0_18px_60px_rgba(60,64,67,0.12)]">
-        <div className="h-1.5 bg-gradient-to-r from-blue-700 via-blue-500 to-sky-400" />
+        <div className="h-1.5 bg-linear-to-r from-blue-700 via-blue-500 to-sky-400" />
         <CardHeader className="px-8 pb-2 pt-8">
           <div className="mb-4 grid size-12 place-items-center rounded-2xl bg-primary text-lg font-bold text-primary-foreground shadow-md shadow-primary/20">
             S
@@ -86,7 +87,14 @@ export const LoginPage = () => {
             </div>
             {genericError && <FieldError className="validation-message" message={genericError} />}
             <Button type="submit" disabled={isSubmitting} className="w-full">
-              {isSubmitting ? 'Signing in…' : 'Sign in'}
+              {isSubmitting ? (
+                <>
+                  <Spinner />
+                  <span className="sr-only">Signing in</span>
+                </>
+              ) : (
+                'Sign in'
+              )}
             </Button>
           </form>
           <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/70 p-4 text-xs leading-5 text-slate-600">

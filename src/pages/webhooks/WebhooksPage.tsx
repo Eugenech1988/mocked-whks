@@ -1,5 +1,13 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  createColumnHelper,
+  functionalUpdate,
+  rowPaginationFeature,
+  rowSortingFeature,
+  tableFeatures,
+  useTable,
+} from '@tanstack/react-table';
 import { toast } from 'sonner';
 import { useWebhooks, type TWebhook } from '@/entities/webhook';
 import { useLogout } from '@/features/auth';
@@ -21,8 +29,48 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  Skeleton,
+  Spinner,
 } from '@/shared/ui';
-import type { TWebhookListLocationUpdate } from './model/types';
+
+const webhookTableFeatures = tableFeatures({ rowPaginationFeature, rowSortingFeature });
+const webhookColumnHelper = createColumnHelper<typeof webhookTableFeatures, TWebhook>();
+const emptyWebhooks: TWebhook[] = [];
+
+const SortIcon = ({ direction }: { direction: false | 'asc' | 'desc' }) => (
+  <svg
+    aria-hidden="true"
+    viewBox="0 0 16 16"
+    fill="none"
+    className={`size-4 transition-colors ${direction ? 'text-primary' : 'text-muted-foreground/60'}`}
+  >
+    {direction === 'asc' ? (
+      <path
+        d="m4 10 4-4 4 4"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ) : direction === 'desc' ? (
+      <path
+        d="m4 6 4 4 4-4"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ) : (
+      <path
+        d="m4 6 4-3 4 3M4 10l4 3 4-3"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    )}
+  </svg>
+);
 
 export const WebhooksPage = () => {
   const navigate = useNavigate();
@@ -30,8 +78,19 @@ export const WebhooksPage = () => {
   const [editing, setEditing] = useState<TWebhook | null>(null);
   const page = Math.max(1, Number(params.get('page')) || 1);
   const search = params.get('search') ?? '';
-  const { data, isLoading, isError } = useWebhooks({ page, limit: 10, search });
+  const sortParam = params.get('sort');
+  const sort =
+    sortParam === 'name' || sortParam === 'url' || sortParam === 'active' ? sortParam : null;
+  const direction = params.get('direction') === 'desc' ? 'desc' : 'asc';
+  const sorting = sort ? [{ id: sort, desc: direction === 'desc' }] : [];
+  const { data, isLoading, isError } = useWebhooks({
+    page,
+    limit: 10,
+    search,
+    ...(sort ? { sort, direction } : {}),
+  });
   const updateWebhook = useUpdateWebhook();
+  const resetWebhook = updateWebhook.reset;
   const logout = useLogout();
   const errors = getFieldErrors(updateWebhook.error);
 
@@ -47,7 +106,7 @@ export const WebhooksPage = () => {
       });
     }
   };
-  const update = (next: TWebhookListLocationUpdate) =>
+  const update = (next: { page?: number; search?: string }) =>
     setParams(current => {
       const merged = { page, search, ...next };
       if (next.search !== undefined) merged.page = 1;
@@ -57,6 +116,83 @@ export const WebhooksPage = () => {
       else current.delete('search');
       return current;
     });
+  const columns = useMemo(
+    () =>
+      webhookColumnHelper.columns([
+        webhookColumnHelper.accessor('name', { header: 'Name', enableSorting: true }),
+        webhookColumnHelper.accessor('url', { header: 'URL', enableSorting: true }),
+        webhookColumnHelper.accessor('active', {
+          header: 'Status',
+          enableSorting: true,
+          cell: ({ row }) => (
+            <Badge variant={row.original.active ? 'default' : 'outline'}>
+              <span
+                className={`mr-1.5 size-1.5 rounded-full ${row.original.active ? 'bg-emerald-500' : 'bg-slate-400'}`}
+              />
+              {row.original.active ? 'Active' : 'Inactive'}
+            </Badge>
+          ),
+        }),
+        webhookColumnHelper.display({
+          id: 'actions',
+          header: 'Actions',
+          cell: ({ row }) => (
+            <Button
+              variant="ghost"
+              className="h-9 px-3 text-primary"
+              onClick={() => {
+                resetWebhook();
+                setEditing(row.original);
+              }}
+            >
+              Edit
+            </Button>
+          ),
+        }),
+      ]),
+    [resetWebhook],
+  );
+  const table = useTable(
+    {
+      features: webhookTableFeatures,
+      columns,
+      data: data?.data ?? emptyWebhooks,
+      rowCount: data?.paging.results.total ?? 0,
+      manualPagination: true,
+      manualSorting: true,
+      state: { pagination: { pageIndex: page - 1, pageSize: 10 }, sorting },
+      onPaginationChange: updater =>
+        setParams(current => {
+          const currentPage = Math.max(1, Number(current.get('page')) || 1);
+          const nextPage =
+            functionalUpdate(updater, { pageIndex: currentPage - 1, pageSize: 10 }).pageIndex + 1;
+          if (nextPage > 1) current.set('page', String(nextPage));
+          else current.delete('page');
+          return current;
+        }),
+      onSortingChange: updater =>
+        setParams(current => {
+          const currentSort = current.get('sort');
+          const currentDirection = current.get('direction') === 'desc';
+          const currentState =
+            currentSort === 'name' || currentSort === 'url' || currentSort === 'active'
+              ? [{ id: currentSort, desc: currentDirection }]
+              : [];
+          const next = functionalUpdate(updater, currentState);
+          const first = next[0];
+          if (first && (first.id === 'name' || first.id === 'url' || first.id === 'active')) {
+            current.set('sort', first.id);
+            current.set('direction', first.desc ? 'desc' : 'asc');
+          } else {
+            current.delete('sort');
+            current.delete('direction');
+          }
+          current.delete('page');
+          return current;
+        }),
+    },
+    state => ({ pagination: state.pagination }),
+  );
   const signOut = () =>
     logout.mutate(undefined, {
       onSuccess: () => toast.success('Signed out'),
@@ -80,7 +216,14 @@ export const WebhooksPage = () => {
           </p>
         </div>
         <Button variant="outline" onClick={signOut} disabled={logout.isPending}>
-          {logout.isPending ? 'Signing out…' : 'Sign out'}
+          {logout.isPending ? (
+            <>
+              <Spinner />
+              <span className="sr-only">Signing out</span>
+            </>
+          ) : (
+            'Sign out'
+          )}
         </Button>
       </header>
 
@@ -110,7 +253,24 @@ export const WebhooksPage = () => {
         </CardHeader>
         <CardContent className="px-0 pb-0">
           {isLoading ? (
-            <p className="py-20 text-center text-sm text-muted-foreground">Loading webhooks…</p>
+            <div
+              className="space-y-0 px-5 py-3 sm:px-7"
+              role="status"
+              aria-label="Loading webhooks"
+            >
+              <span className="sr-only">Loading webhooks</span>
+              {Array.from({ length: 6 }, (_, index) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-4 items-center gap-4 border-b py-5 last:border-0"
+                >
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-6 w-20 rounded-full" />
+                  <Skeleton className="ml-auto h-8 w-14" />
+                </div>
+              ))}
+            </div>
           ) : isError ? (
             <p
               role="alert"
@@ -118,47 +278,68 @@ export const WebhooksPage = () => {
             >
               Could not load webhooks. Please try again.
             </p>
-          ) : data?.data.length ? (
+          ) : table.getRowModel().rows.length ? (
             <>
               <div className="overflow-x-auto">
-                <Table className="min-w-[680px]">
+                <Table className="min-w-170">
                   <TableHeader>
-                    <TableRow className="bg-muted/40 hover:bg-muted/40">
-                      <TableHead className="pl-7">Name</TableHead>
-                      <TableHead>URL</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="pr-7 text-right">Actions</TableHead>
-                    </TableRow>
+                    {table.getHeaderGroups().map(group => (
+                      <TableRow key={group.id} className="bg-muted/40 hover:bg-muted/40">
+                        {group.headers.map(header => (
+                          <TableHead
+                            key={header.id}
+                            aria-sort={
+                              header.column.getIsSorted() === 'asc'
+                                ? 'ascending'
+                                : header.column.getIsSorted() === 'desc'
+                                  ? 'descending'
+                                  : 'none'
+                            }
+                            className={
+                              header.column.id === 'name'
+                                ? 'pl-7'
+                                : header.column.id === 'actions'
+                                  ? 'pr-7 text-right'
+                                  : undefined
+                            }
+                          >
+                            {header.isPlaceholder ? null : header.column.getCanSort() ? (
+                              <button
+                                type="button"
+                                onClick={header.column.getToggleSortingHandler()}
+                                className="inline-flex cursor-pointer items-center gap-2"
+                                aria-label={`Sort by ${String(header.column.columnDef.header)}`}
+                              >
+                                <table.FlexRender header={header} />
+                                <SortIcon direction={header.column.getIsSorted()} />
+                              </button>
+                            ) : (
+                              <table.FlexRender header={header} />
+                            )}
+                          </TableHead>
+                        ))}
+                      </TableRow>
+                    ))}
                   </TableHeader>
                   <TableBody>
-                    {data.data.map(item => (
-                      <TableRow key={item.id} data-testid="webhook-row">
-                        <TableCell className="pl-7 font-semibold text-foreground">
-                          {item.name}
-                        </TableCell>
-                        <TableCell className="max-w-[360px] truncate text-muted-foreground">
-                          {item.url}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={item.active ? 'default' : 'outline'}>
-                            <span
-                              className={`mr-1.5 size-1.5 rounded-full ${item.active ? 'bg-emerald-500' : 'bg-slate-400'}`}
-                            />
-                            {item.active ? 'Active' : 'Inactive'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="pr-7 text-right">
-                          <Button
-                            variant="ghost"
-                            className="h-9 px-3 text-primary"
-                            onClick={() => {
-                              updateWebhook.reset();
-                              setEditing(item);
-                            }}
+                    {table.getRowModel().rows.map(row => (
+                      <TableRow key={row.id} data-testid="webhook-row">
+                        {row.getAllCells().map(cell => (
+                          <TableCell
+                            key={cell.id}
+                            className={
+                              cell.column.id === 'name'
+                                ? 'pl-7 font-semibold text-foreground'
+                                : cell.column.id === 'url'
+                                  ? 'max-w-90 truncate text-muted-foreground'
+                                  : cell.column.id === 'actions'
+                                    ? 'pr-7 text-right'
+                                    : undefined
+                            }
                           >
-                            Edit
-                          </Button>
-                        </TableCell>
+                            <table.FlexRender cell={cell} />
+                          </TableCell>
+                        ))}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -166,22 +347,22 @@ export const WebhooksPage = () => {
               </div>
               <footer className="flex flex-col gap-3 border-t border-border/70 px-5 py-4 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-7">
                 <span className="text-muted-foreground">
-                  Page {data.paging.pages.current} of {data.paging.pages.last}
+                  Page {table.state.pagination.pageIndex + 1} of {table.getPageCount()}
                 </span>
                 <div className="flex justify-end gap-2">
                   <Button
                     variant="outline"
                     className="h-9 px-4"
-                    disabled={page <= 1}
-                    onClick={() => update({ page: page - 1 })}
+                    disabled={!table.getCanPreviousPage()}
+                    onClick={() => table.previousPage()}
                   >
                     Previous
                   </Button>
                   <Button
                     variant="outline"
                     className="h-9 px-4"
-                    disabled={page >= data.paging.pages.last}
-                    onClick={() => update({ page: page + 1 })}
+                    disabled={!table.getCanNextPage()}
+                    onClick={() => table.nextPage()}
                   >
                     Next
                   </Button>

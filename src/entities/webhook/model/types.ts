@@ -30,7 +30,11 @@ export type TWebhookParams = {
   page: number;
   limit: number;
   search: string;
+  sort?: TWebhookSortField;
+  direction?: 'asc' | 'desc';
 };
+
+export type TWebhookSortField = 'name' | 'url' | 'active';
 
 export type TWebhookUpdatePayload = {
   name: string;
