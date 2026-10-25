@@ -1,0 +1,7 @@
+node_modules/
+dist/
+coverage/
+cypress/videos/
+cypress/screenshots/
+public/mockServiceWorker.js
+bun.lock
