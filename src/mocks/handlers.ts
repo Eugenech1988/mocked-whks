@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import type { TWebhook } from '@/entities/webhook';
-import { demoCredentials } from './credentials';
+import { DEMO_CREDENTIALS } from '@/shared/config/demoCredentials';
 import type {
   TMockCookies,
   TMockLoginRequest,
@@ -12,10 +12,15 @@ import type {
   TMockWebhookUpdateRequest,
 } from './types';
 
-const csrfToken = 'smart-sender-csrf-token';
-const { email, password } = demoCredentials;
-const user: TMockUser = { id: 1, email, first_name: 'Demo', last_name: 'User', name: 'Demo User' };
-const webhooks: TWebhook[] = Array.from({ length: 28 }, (_, index) => ({
+const MOCK_CSRF_TOKEN = 'smart-sender-csrf-token';
+const MOCK_USER: TMockUser = {
+  id: 1,
+  email: DEMO_CREDENTIALS.email,
+  first_name: 'Demo',
+  last_name: 'User',
+  name: 'Demo User',
+};
+const MOCK_WEBHOOKS: TWebhook[] = Array.from({ length: 28 }, (_, index) => ({
   id: index + 1,
   name:
     ['Lead created', 'Order paid', 'Contact updated', 'Message delivered'][index % 4] +
@@ -24,8 +29,8 @@ const webhooks: TWebhook[] = Array.from({ length: 28 }, (_, index) => ({
   active: index % 5 !== 0,
   created_at: new Date(Date.UTC(2025, 0, index + 1)).toISOString(),
 }));
-const issuedTokens = new Map<string, string>();
-const sessions = new Map<string, TMockSession>();
+const ISSUED_TOKENS = new Map<string, string>();
+const MOCK_SESSIONS = new Map<string, TMockSession>();
 const makeError = (
   status: number,
   type: string,
@@ -33,18 +38,18 @@ const makeError = (
   payload?: TMockValidationPayload,
 ) => HttpResponse.json({ error: { type, message, ...(payload ? { payload } : {}) } }, { status });
 const readJson = async <T>(request: Request) => (await request.json()) as T;
-const csrfValid = (request: Request) => request.headers.get('X-CSRF-TOKEN') === csrfToken;
+const csrfValid = (request: Request) => request.headers.get('X-CSRF-TOKEN') === MOCK_CSRF_TOKEN;
 const cookieId = (cookies: TMockCookies) => cookies.smart_sender_session;
 const activeSession = (cookies: TMockCookies) => {
-  const session = sessions.get(cookieId(cookies) ?? '');
+  const session = MOCK_SESSIONS.get(cookieId(cookies) ?? '');
   return session && !session.revoked && session.expiresAt > Date.now() ? session : null;
 };
 const authError = () => makeError(401, 'AuthenticationException', 'Unauthenticated.');
 
-export const handlers = [
+export const MOCK_HANDLERS = [
   http.get(
     '/csrf',
-    () => new HttpResponse(null, { status: 204, headers: { 'X-CSRF-TOKEN': csrfToken } }),
+    () => new HttpResponse(null, { status: 204, headers: { 'X-CSRF-TOKEN': MOCK_CSRF_TOKEN } }),
   ),
   http.post('/auth/login', async ({ request }) => {
     if (!csrfValid(request))
@@ -54,7 +59,7 @@ export const handlers = [
       return makeError(422, 'ValidationException', 'The given data was invalid.', {
         email: ['Captcha is required.'],
       });
-    if (body.email !== email || body.password !== password)
+    if (body.email !== DEMO_CREDENTIALS.email || body.password !== DEMO_CREDENTIALS.password)
       return makeError(422, 'ValidationException', 'The given data was invalid.', {
         email: ['These credentials do not match our records.'],
       });
@@ -63,18 +68,18 @@ export const handlers = [
         fingerprint: ['The fingerprint is invalid.'],
       });
     const token = crypto.randomUUID();
-    issuedTokens.set(token, body.fingerprint);
+    ISSUED_TOKENS.set(token, body.fingerprint);
     return HttpResponse.json({ device_session_token: token });
   }),
   http.post('/auth/token/issue', async ({ request }) => {
     if (!csrfValid(request))
       return makeError(419, 'TokenMismatchException', 'CSRF token mismatch.');
     const body = await readJson<TMockTokenIssueRequest>(request);
-    if (issuedTokens.get(body.device_session_token) !== body.fingerprint)
+    if (ISSUED_TOKENS.get(body.device_session_token) !== body.fingerprint)
       return makeError(422, 'ValidationException', 'The given data was invalid.');
-    issuedTokens.delete(body.device_session_token);
+    ISSUED_TOKENS.delete(body.device_session_token);
     const id = crypto.randomUUID();
-    sessions.set(id, {
+    MOCK_SESSIONS.set(id, {
       fingerprint: body.fingerprint,
       expiresAt: Date.now() + 30_000,
       revoked: false,
@@ -91,7 +96,7 @@ export const handlers = [
       return makeError(419, 'TokenMismatchException', 'CSRF token mismatch.');
     const body = await readJson<TMockTokenFingerprintRequest>(request);
     const id = cookieId(cookies);
-    const session = id ? sessions.get(id) : undefined;
+    const session = id ? MOCK_SESSIONS.get(id) : undefined;
     if (!session || session.revoked || session.fingerprint !== body.fingerprint)
       return makeError(400, 'BadRequestException', 'Session cannot be rotated.');
     session.expiresAt = Date.now() + 30_000;
@@ -106,7 +111,7 @@ export const handlers = [
     if (!csrfValid(request))
       return makeError(419, 'TokenMismatchException', 'CSRF token mismatch.');
     const id = cookieId(cookies);
-    const session = id ? sessions.get(id) : undefined;
+    const session = id ? MOCK_SESSIONS.get(id) : undefined;
     if (session) session.revoked = true;
     return new HttpResponse(null, {
       status: 204,
@@ -114,7 +119,7 @@ export const handlers = [
     });
   }),
   http.get('/v1/me', ({ cookies }) =>
-    activeSession(cookies) ? HttpResponse.json(user) : authError(),
+    activeSession(cookies) ? HttpResponse.json(MOCK_USER) : authError(),
   ),
   http.get('/v1/webhooks', ({ request, cookies }) => {
     if (!activeSession(cookies)) return authError();
@@ -122,7 +127,7 @@ export const handlers = [
     const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
     const limit = Math.max(1, Number(url.searchParams.get('limit')) || 10);
     const search = (url.searchParams.get('search') ?? '').toLowerCase();
-    const filtered = webhooks.filter(item => item.name.toLowerCase().includes(search));
+    const filtered = MOCK_WEBHOOKS.filter(item => item.name.toLowerCase().includes(search));
     const sort = url.searchParams.get('sort');
     const direction = url.searchParams.get('direction') === 'desc' ? -1 : 1;
     if (sort === 'name' || sort === 'url' || sort === 'active') {
@@ -147,7 +152,7 @@ export const handlers = [
   }),
   http.get('/v1/webhooks/:id', ({ params, cookies }) => {
     if (!activeSession(cookies)) return authError();
-    const webhook = webhooks.find(item => item.id === Number(params.id));
+    const webhook = MOCK_WEBHOOKS.find(item => item.id === Number(params.id));
     return webhook
       ? HttpResponse.json(webhook)
       : makeError(404, 'NotFoundException', 'Webhook not found.');
@@ -167,7 +172,7 @@ export const handlers = [
     }
     if (Object.keys(errors).length)
       return makeError(422, 'ValidationException', 'The given data was invalid.', errors);
-    const webhook = webhooks.find(item => item.id === Number(params.id));
+    const webhook = MOCK_WEBHOOKS.find(item => item.id === Number(params.id));
     if (!webhook) return makeError(404, 'NotFoundException', 'Webhook not found.');
     Object.assign(webhook, {
       name: body.name.trim(),

@@ -1,6 +1,7 @@
 import { Controller, useForm, useFormState } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { updateWebhookSchema, type TUpdateWebhookFormValues } from '@/features/edit-webhook';
+import { UPDATE_WEBHOOK_SCHEMA } from './schema';
+import type { TEditWebhookDialogProps, TUpdateWebhookFormValues } from './types';
 import {
   Button,
   Dialog,
@@ -16,7 +17,6 @@ import {
   Switch,
   Spinner,
 } from '@/shared/ui';
-import type { TEditWebhookDialogProps } from './types';
 
 export const EditWebhookDialog = ({
   webhook,
@@ -25,7 +25,7 @@ export const EditWebhookDialog = ({
   onSave,
 }: TEditWebhookDialogProps) => {
   const { register, control, handleSubmit } = useForm<TUpdateWebhookFormValues>({
-    resolver: zodResolver(updateWebhookSchema),
+    resolver: zodResolver(UPDATE_WEBHOOK_SCHEMA),
     mode: 'onTouched',
     defaultValues: {
       name: webhook?.name ?? '',

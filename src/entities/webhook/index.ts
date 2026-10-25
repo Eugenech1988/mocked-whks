@@ -1,4 +1,4 @@
-export { useWebhooks, useWebhook, webhookKeys } from './api';
+export { useWebhooks, WEBHOOK_KEYS } from './api';
 export type {
   TWebhook,
   TWebhookList,
@@ -6,5 +6,6 @@ export type {
   TWebhookPaging,
   TWebhookParams,
   TWebhookResultCounts,
+  TWebhookSortField,
   TWebhookUpdatePayload,
 } from './model/types';

@@ -1,23 +1,17 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { api } from '@/shared/api';
-import type { TWebhook, TWebhookList, TWebhookParams } from '@/entities';
+import type { TWebhookList, TWebhookParams } from './model/types';
 
-export const webhookKeys = {
+export const WEBHOOK_KEYS = {
   all: ['webhooks'] as const,
-  lists: () => [...webhookKeys.all, 'list'] as const,
-  list: (params: TWebhookParams) => [...webhookKeys.lists(), params] as const,
-  detail: (id: number) => [...webhookKeys.all, 'detail', id] as const,
+  lists: () => [...WEBHOOK_KEYS.all, 'list'] as const,
+  list: (params: TWebhookParams) => [...WEBHOOK_KEYS.lists(), params] as const,
+  detail: (id: number) => [...WEBHOOK_KEYS.all, 'detail', id] as const,
 };
 
 export const useWebhooks = (params: TWebhookParams) =>
   useQuery({
-    queryKey: webhookKeys.list(params),
+    queryKey: WEBHOOK_KEYS.list(params),
     queryFn: async () => (await api.get<TWebhookList>('/v1/webhooks', { params })).data,
     placeholderData: keepPreviousData,
-  });
-
-export const useWebhook = (id: number) =>
-  useQuery({
-    queryKey: webhookKeys.detail(id),
-    queryFn: async () => (await api.get<TWebhook>(`/v1/webhooks/${id}`)).data,
   });

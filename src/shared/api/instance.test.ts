@@ -1,22 +1,22 @@
 import { http, HttpResponse } from 'msw';
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
-import { server } from '@/mocks/server';
+import { MOCK_SERVER } from '@/mocks/server';
 import { api, setSessionActive } from './instance';
 import type { TTestProtectedResponse } from './instance.test.types';
 
 describe('API auth retry', () => {
-  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+  beforeAll(() => MOCK_SERVER.listen({ onUnhandledRequest: 'error' }));
   afterEach(() => {
-    server.resetHandlers();
+    MOCK_SERVER.resetHandlers();
     setSessionActive(false);
   });
-  afterAll(() => server.close());
+  afterAll(() => MOCK_SERVER.close());
 
   it('shares one rotate request for parallel 401 responses, then retries both requests', async () => {
     setSessionActive(true);
     const attempts = new Map<string, number>();
     let rotations = 0;
-    server.use(
+    MOCK_SERVER.use(
       http.get('/__test/protected/:id', ({ params }) => {
         const id = String(params.id);
         const attempt = attempts.get(id) ?? 0;

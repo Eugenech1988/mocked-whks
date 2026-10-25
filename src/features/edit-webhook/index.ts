@@ -1,3 +1,4 @@
 export { useUpdateWebhook } from './useUpdateWebhook';
-export { updateWebhookSchema } from './schema';
+export { UPDATE_WEBHOOK_SCHEMA } from './schema';
+export { EditWebhookDialog } from './EditWebhookDialog';
 export type * from './types';

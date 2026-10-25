@@ -1,5 +1,5 @@
 export { Button } from './button';
-export { buttonVariants } from './buttonVariants';
+export { BUTTON_VARIANTS } from './buttonVariants';
 export { Badge } from './badge';
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
 export {

@@ -15,7 +15,7 @@ export const api = axios.create({
 let csrfToken: string | null = null;
 let rotatePromise: Promise<void> | null = null;
 let csrfPromise: Promise<string | null> | null = null;
-const fingerprintKey = 'smart-sender:fingerprint';
+const FINGERPRINT_KEY = 'smart-sender:fingerprint';
 // only for test
 let sessionActive = false;
 
@@ -24,20 +24,19 @@ export const setSessionActive = (active: boolean) => {
 };
 
 export const getDeviceFingerprint = () => {
-  let value = localStorage.getItem(fingerprintKey);
+  let value = localStorage.getItem(FINGERPRINT_KEY);
   if (!value) {
     value = Array.from(crypto.getRandomValues(new Uint8Array(16)), byte =>
       byte.toString(16).padStart(2, '0'),
     ).join('');
-    localStorage.setItem(fingerprintKey, value);
+    localStorage.setItem(FINGERPRINT_KEY, value);
   }
   return value;
 };
 
 const getCsrf = async () => {
   if (csrfToken) return csrfToken;
-  csrfPromise ??= api
-    .get('/csrf')
+  csrfPromise ??= api.get('/csrf')
     .then(response => {
       csrfToken = response.headers['x-csrf-token'] ?? null;
       return csrfToken;
@@ -77,8 +76,7 @@ api.interceptors.response.use(
     ) {
       config._authRetried = true;
       try {
-        rotatePromise ??= api
-          .post('/auth/token/rotate', { fingerprint: getDeviceFingerprint() })
+        rotatePromise ??= api.post('/auth/token/rotate', { fingerprint: getDeviceFingerprint() })
           .then(() => undefined)
           .finally(() => {
             rotatePromise = null;
@@ -88,7 +86,6 @@ api.interceptors.response.use(
       } catch {
         sessionActive = false;
         queryClient.clear();
-        useSessionStore.getState().setSignedIn(false);
         useSessionStore.getState().setSessionExpired(true);
         return Promise.reject(error);
       }
@@ -100,7 +97,6 @@ api.interceptors.response.use(
     ) {
       sessionActive = false;
       queryClient.clear();
-      useSessionStore.getState().setSignedIn(false);
       useSessionStore.getState().setSessionExpired(true);
     }
     return Promise.reject(error);

@@ -1,6 +1,4 @@
-export interface ISessionState {
-  signedIn: boolean;
+export type TSessionState = {
   sessionExpired: boolean;
-  setSignedIn: (signedIn: boolean) => void;
   setSessionExpired: (sessionExpired: boolean) => void;
-}
+};

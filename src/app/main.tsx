@@ -7,8 +7,8 @@ import './style.css';
 const bootstrap = async () => {
   if (import.meta.env.DEV) {
     try {
-      const { worker } = await import('@/mocks/browser');
-      await worker.start({ onUnhandledRequest: 'bypass' });
+      const { MOCK_WORKER } = await import('@/mocks/browser');
+      await MOCK_WORKER.start({ onUnhandledRequest: 'bypass' });
     } catch (error) {
       console.error('Mock service worker failed to start:', error);
     }

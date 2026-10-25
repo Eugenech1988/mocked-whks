@@ -7,8 +7,6 @@ import type {
   TUser,
 } from './model/types';
 
-export type { TLoginCredentials, TUser } from './model/types';
-
 export const login = async (email: string, password: string) => {
   const fingerprint = getDeviceFingerprint();
   const body: TLoginRequest = { email, password, fingerprint };

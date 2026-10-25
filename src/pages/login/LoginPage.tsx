@@ -2,8 +2,8 @@ import { useForm, useFormState } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { loginSchema, useLogin, type TLoginCredentials } from '@/features/auth';
-import { demoCredentials } from '@/mocks';
+import { LOGIN_SCHEMA, useLogin, type TLoginCredentials } from '@/features/auth';
+import { DEMO_CREDENTIALS } from '@/shared/config/demoCredentials';
 import { getFieldErrors } from '@/shared/api';
 import {
   Button,
@@ -22,7 +22,7 @@ export const LoginPage = () => {
   const navigate = useNavigate();
   const login = useLogin();
   const { register, control, handleSubmit } = useForm<TLoginCredentials>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(LOGIN_SCHEMA),
     mode: 'onTouched',
     defaultValues: { email: '', password: '' },
   });
@@ -99,8 +99,8 @@ export const LoginPage = () => {
           </form>
           <div className="mt-6 rounded-xl border border-blue-100 bg-blue-50/70 p-4 text-xs leading-5 text-slate-600">
             <p className="mb-1 font-semibold text-slate-800">Demo account</p>
-            <p>Email: {demoCredentials.email}</p>
-            <p>Password: {demoCredentials.password}</p>
+            <p>Email: {DEMO_CREDENTIALS.email}</p>
+            <p>Password: {DEMO_CREDENTIALS.password}</p>
           </div>
         </CardContent>
       </Card>
